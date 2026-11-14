@@ -1,0 +1,19 @@
+jupyter
+matplotlib
+numpy
+pandas
+pillow~=10.3.0
+captum~=0.7.0
+torchcam~=0.4.0
+torch
+opencv-python   # for import cv2
+torchvision
+IPython
+datasets
+tqdm
+huggingface-hub
+zennit~=0.5.1
+zennit-crp~=0.6.0
+
+# Packages from GitHub
+segment_anything @ git+https://github.com/facebookresearch/segment-anything.git@6fdee8f

@@ -1,0 +1,18 @@
+version: "3.8" # Ensure your version supports deploy resources
+
+services:
+  jupyter:
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./:/usr/src/app"
+    env_file:
+      - .env # copy from .env.example and set tokens
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: ["gpu"]
