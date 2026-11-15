@@ -1,0 +1,48 @@
+[project]
+name = "automatic-image-segmentation"
+version = "0.1.0"
+description = "Automatic image segmentation by guiding SAM with saliency maps"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    # Deep learning (PyPI wheels for Linux ship with CUDA 12.1 runtime libs)
+    "torch==2.4.1",
+    "torchvision==0.19.1",
+    "segment-anything @ git+https://github.com/facebookresearch/segment-anything.git@6fdee8f",
+    # XAI / saliency
+    "captum~=0.7.0",
+    "torchcam~=0.4.0",
+    "zennit~=0.5.1",
+    # Scientific stack
+    "numpy>=1.26,<2",
+    "scipy>=1.14",
+    "pandas>=2.2",
+    "matplotlib>=3.9",
+    "pillow~=10.3",
+    "opencv-python-headless>=4.10,<4.11",
+    "scikit-image>=0.24",
+    "scikit-learn>=1.5",
+    # Data
+    "datasets>=3.0",
+    "pyarrow<22",  # pyarrow>=22 requires numpy>=2
+    "huggingface-hub>=0.25",
+    "tqdm>=4.66",
+    # Caps BLAS/OpenMP threads at startup (see tools/thread-limits)
+    "thread-limits",
+]
+
+[dependency-groups]
+dev = [
+    "jupyterlab>=4.2",
+    "ipykernel>=6.29",
+    "ipywidgets>=8.1",
+]
+
+[tool.uv.sources]
+thread-limits = { path = "tools/thread-limits", editable = false }
+
+[tool.uv]
+# Flat repo of scripts/notebooks, not an installable package.
+package = false
+environments = ["sys_platform == 'linux'"]

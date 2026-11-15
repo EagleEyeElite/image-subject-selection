@@ -1,0 +1,12 @@
+.git
+.idea
+.venv
+.env
+checkpoints/
+sam_models/
+datasets/
+data/
+ImageNetS919/
+**/__pycache__
+**/.ipynb_checkpoints
+*.pth

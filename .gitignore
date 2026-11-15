@@ -173,4 +173,4 @@ image.jpg
 sam_models/
 
 *.DS_Store
-=2.12
+checkpoints/

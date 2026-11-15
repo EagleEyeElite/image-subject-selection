@@ -1,5 +1,3 @@
-version: "3.8" # Ensure your version supports deploy resources
-
 services:
   jupyter:
     build: .
@@ -9,10 +7,10 @@ services:
       - "./:/usr/src/app"
     env_file:
       - .env # copy from .env.example and set tokens
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
     deploy:
       resources:
         reservations:
           devices:
-            - capabilities: ["gpu"]
+            - driver: nvidia
+              count: all
+              capabilities: ["gpu"]

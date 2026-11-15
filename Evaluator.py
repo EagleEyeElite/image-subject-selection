@@ -4,7 +4,7 @@ from model_handler.resnet import resnet
 from dataset_handler.pascal import PascalDataset
 import heatmap_handler
 from model_handler import device
-from utils.utils import SquareCropAndResize, imagenet_transform, inverse_transform, sam_predict
+from utils.utils import SquareCropAndResize, imagenet_transform, inverse_transform, mask_transform, sam_predict
 import prompt_handler
 from segment_anything import sam_model_registry, SamPredictor
 from PIL import Image
@@ -21,7 +21,7 @@ os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 # Handler Loader
 model = resnet(4)
 dataset = PascalDataset(device, imagenet_transform,
-                        inverse_transform, target_transform=None)
+                        inverse_transform, target_transform=mask_transform)
 # currently returns only the methods combined with negative grid
 xai_methods = heatmap_handler.get_lrp_methods()
 point_generator = prompt_handler.get_best_methods()
@@ -42,7 +42,7 @@ for indx, method in enumerate(segment_eval):
 
 
 # SAM
-sam_checkpoint = r'/home/dai/araystds/shared/petro/sam_models/sam_vit_b_01ec64.pth'
+sam_checkpoint = os.environ.get('SAM_CHECKPOINT', 'checkpoints/sam_vit_b_01ec64.pth')
 model_type = "vit_b"
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 sam = sam.to(device)

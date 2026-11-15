@@ -172,6 +172,12 @@ imagenet_transform = torchvision.transforms.Compose(
     ]
 )
 
+# Resize segmentation masks the same way as imagenet_transform resizes images
+# (nearest neighbour so class ids stay intact).
+mask_transform = torchvision.transforms.Resize(
+    224, interpolation=torchvision.transforms.InterpolationMode.NEAREST
+)
+
 square_transform = torchvision.transforms.Compose(
     [
         SquareCropAndResize(size=None),

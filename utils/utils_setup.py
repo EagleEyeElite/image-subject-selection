@@ -34,7 +34,7 @@ def check_if_running_in_docker():
     return os.getenv('RUNNING_IN_DOCKER', 'false').lower() == 'true'
 
 
-def load_models(sam_checkpoint_path, resnet_checkpoint_path, class_labels_path):
+def load_models(sam_checkpoint_path, resnet_checkpoint_path, class_labels_path, image_path=None):
     """
     Loads the SAM model, ResNet model, ImageNet labels, and image, and generates masks.
 
@@ -42,6 +42,7 @@ def load_models(sam_checkpoint_path, resnet_checkpoint_path, class_labels_path):
         sam_checkpoint_path (str): Path to the SAM model checkpoint.
         resnet_checkpoint_path (str): Path to the ResNet model checkpoint.
         class_labels_path (str): Path to the ImageNet class labels.
+        image_path (str, optional): Path to an image; if given, the RGB image is returned as 4th value.
 
     Returns:
         sam (object): Loaded SAM model.
@@ -64,8 +65,14 @@ def load_models(sam_checkpoint_path, resnet_checkpoint_path, class_labels_path):
     assert resnet is not None, "ResNet model not loaded."
     assert imagenet_labels is not None, "Imagenet labels not loaded."
 
+    if image_path is not None:
+        image_rgb = load_image(image_path)
+        assert image_rgb is not None, f"Image not loaded: {image_path}"
+
     print("All models and data loaded correctly.")
 
+    if image_path is not None:
+        return sam, resnet, imagenet_labels, image_rgb
     return sam, resnet, imagenet_labels
 
 
@@ -86,6 +93,8 @@ def load_resnet_model(checkpoint_path):
 # Function to load and process image
 def load_image(image_path):
     image = cv2.imread(image_path)
+    if image is None:
+        raise FileNotFoundError(f"Could not read image: {image_path}")
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image_rgb
 

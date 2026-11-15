@@ -1,44 +1,35 @@
-# pytorch/pytorch
-FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+# CUDA runtime libs come bundled with the torch wheels, so a slim Python base is enough.
+# Run with GPU access (e.g. `docker compose up`, which requests the nvidia device).
+FROM python:3.12-slim-bookworm
 
-# Set the working directory in the container
+ENV UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH=/opt/venv/bin:$PATH \
+    RUNNING_IN_DOCKER=true \
+    PYTHONUNBUFFERED=1
+
+# git: segment-anything is installed from GitHub; libglib2.0-0: needed by OpenCV
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git curl ca-certificates libglib2.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir uv==0.11.16
+
 WORKDIR /usr/src/app
 
-# Install system dependencies for OpenCV
-RUN apt-get update && \
-    apt-get install -y \
-    wget \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libglib2.0-0 \
-    libgl1-mesa-glx \
-    git \
-    && rm -rf /var/lib/apt/lists/*  # Clean up to reduce image size
+# Dependencies first (cached layer). The venv lives in /opt/venv so the
+# docker-compose bind mount of the repo onto /usr/src/app doesn't hide it.
+COPY pyproject.toml uv.lock README.md LICENSE ./
+COPY tools/ tools/
+RUN uv sync --frozen
 
+# Model checkpoints (SAM vit_b + ResNet50)
+COPY scripts/download_checkpoints.sh scripts/
+RUN scripts/download_checkpoints.sh /usr/models
 
-# Download the AI SAM model file
-RUN wget "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth" -P /usr/models/
-RUN wget "https://download.pytorch.org/models/resnet50-0676ba61.pth" -P /usr/models/
+COPY . .
 
-# Install Jupyter
-# Copy the requirements.txt file into the container
-COPY requirements.txt /usr/src/app/
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Configure huggingface-cli to use the token non-interactively
-ARG HF_TOKEN
-RUN python -c "from huggingface_hub import HfFolder; HfFolder.save_token('${HF_TOKEN}')"
-
-# Copy the sample notebook into the container
-COPY * /usr/src/app/
-
-# Make port 8888 available to the world outside this container
 EXPOSE 8888
 
-# Run Jupyter Notebook
-# Note: '--allow-root' is often needed in Docker containers
-# '--ip=0.0.0.0' makes the notebook accessible from outside the container
-CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token='token'"]
+# Jupyter reads the access token from $JUPYTER_TOKEN; Hugging Face reads $HF_TOKEN.
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
