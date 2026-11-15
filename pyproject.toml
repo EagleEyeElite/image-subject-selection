@@ -45,7 +45,7 @@ build-backend = "hatchling.build"
 allow-direct-references = true  # segment-anything from GitHub
 
 [tool.hatch.build.targets.wheel]
-packages = ["saliency_sam"]
+packages = ["src/saliency_sam"]
 
 [tool.uv]
 environments = ["sys_platform == 'linux'"]

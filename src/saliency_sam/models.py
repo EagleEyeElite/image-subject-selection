@@ -10,7 +10,7 @@ import torchvision
 from segment_anything import sam_model_registry
 from torchvision.models import ResNet50_Weights
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]  # src/saliency_sam/models.py
 
 # scripts/download_checkpoints.sh puts the weights here; the Docker image sets
 # CHECKPOINT_DIR=/usr/models.

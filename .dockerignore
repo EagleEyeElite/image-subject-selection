@@ -7,3 +7,4 @@ datasets/
 **/__pycache__
 **/.ipynb_checkpoints
 *.pth
+results/

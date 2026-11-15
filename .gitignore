@@ -167,3 +167,5 @@ checkpoints/
 *.pth
 !tools/thread-limits/thread_limits.pth
 *.DS_Store
+# Created by notebooks/evaluation.ipynb
+results/
