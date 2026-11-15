@@ -19,7 +19,7 @@ from .models import (
     predict,
     to_tensor,
 )
-from .segmentation import SegmentationResult, mask_generator, segment
+from .segmentation import MAX_AREA, SegmentationResult, mask_generator, segment
 from .xai import GradCAM, LayerCAM, lrp_epsilon_plus, lrp_gamma_box, to_image_size
 
 XAI_METHODS = {
@@ -60,8 +60,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("-o", "--output", type=Path, default=Path("."), help="output folder (default: .)")
     parser.add_argument("--xai", choices=XAI_METHODS, default="layercam", help="saliency method (default: layercam)")
     parser.add_argument("--sam", choices=["vit_b", "vit_l", "vit_h"], default="vit_b", help="SAM model (default: vit_b)")
-    parser.add_argument("--max-area", type=float, default=50.0,
-                        help="clusters larger than this percentage of the image are background (default: 50)")
+    parser.add_argument("--max-area", type=float, default=MAX_AREA,
+                        help=f"clusters larger than this percentage of the image are background (default: {MAX_AREA:g})")
     parser.add_argument("--figures", action="store_true", help="also write the figures of every pipeline step")
     parser.add_argument("--dpi", type=int, default=90, help="resolution of the figures (default: 90)")
     args = parser.parse_args(argv)

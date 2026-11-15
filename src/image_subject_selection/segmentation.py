@@ -16,6 +16,10 @@ GENERATOR_SETTINGS = dict(
     min_mask_region_area=100,  # post-processing with OpenCV
 )
 
+# Clusters covering more than this percentage of the image are background: with a
+# weak heatmap around the object their size alone can earn them a high score.
+MAX_AREA = 40.0
+
 
 @dataclass
 class Cluster:
@@ -118,13 +122,13 @@ def combine(clusters: list[Cluster], shape: tuple[int, ...]) -> np.ndarray:
 
 
 def segment(
-    image: np.ndarray, heatmap: np.ndarray, generator: SamAutomaticMaskGenerator, max_area: float = 50.0
+    image: np.ndarray, heatmap: np.ndarray, generator: SamAutomaticMaskGenerator, max_area: float = MAX_AREA
 ) -> SegmentationResult:
     """Run the whole pipeline on an RGB image and its heatmap (same size, [0, 1])."""
     return select(generator.generate(image), heatmap, max_area)
 
 
-def select(masks: list[dict], heatmap: np.ndarray, max_area: float = 50.0) -> SegmentationResult:
+def select(masks: list[dict], heatmap: np.ndarray, max_area: float = MAX_AREA) -> SegmentationResult:
     """Pick from SAM's masks of an image with the heatmap; ``segment`` without the SAM pass,
     so several heatmaps can share one set of masks.
 

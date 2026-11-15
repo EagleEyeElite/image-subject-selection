@@ -9,8 +9,10 @@
 
 import numpy as np
 
+from .segmentation import MAX_AREA
 
-def largest_mask(masks: list[dict], shape: tuple[int, ...], max_area: float = 50.0) -> np.ndarray:
+
+def largest_mask(masks: list[dict], shape: tuple[int, ...], max_area: float = MAX_AREA) -> np.ndarray:
     """The largest SAM mask that is not background (at most ``max_area`` percent of the image)."""
     limit = max_area / 100 * shape[0] * shape[1]
     candidates = [m for m in masks if m["area"] <= limit]
@@ -19,7 +21,7 @@ def largest_mask(masks: list[dict], shape: tuple[int, ...], max_area: float = 50
     return max(candidates, key=lambda m: m["area"])["segmentation"]
 
 
-def center_mask(masks: list[dict], shape: tuple[int, ...], max_area: float = 50.0) -> np.ndarray:
+def center_mask(masks: list[dict], shape: tuple[int, ...], max_area: float = MAX_AREA) -> np.ndarray:
     """The largest non-background SAM mask containing the image center; objects
     in photos tend to be centered. Falls back to ``largest_mask``."""
     cy, cx = shape[0] // 2, shape[1] // 2

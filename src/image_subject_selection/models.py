@@ -25,11 +25,24 @@ RESNET_CHECKPOINT = "resnet50-0676ba61.pth"  # = ResNet50_Weights.IMAGENET1K_V1
 
 IMAGENET_LABELS: list[str] = ResNet50_Weights.IMAGENET1K_V1.meta["categories"]
 
-# ImageNet normalization; no resizing, the saliency map is scaled to the image.
-to_tensor = torchvision.transforms.Compose([
+# Longest side of the classifier input. ResNet50 was trained on 224 px crops; on
+# a large photo its receptive field sees texture (grass) instead of the object.
+CLASSIFIER_MAX_SIDE = 640
+
+_normalize = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
+
+
+def to_tensor(image: np.ndarray, max_side: int = CLASSIFIER_MAX_SIDE) -> torch.Tensor:
+    """Classifier input: the RGB image scaled down to at most ``max_side`` pixels
+    and ImageNet-normalized. The saliency map is scaled back to the image size."""
+    scale = max_side / max(image.shape[:2])
+    if scale < 1:
+        size = (round(image.shape[1] * scale), round(image.shape[0] * scale))
+        image = cv2.resize(image, size, interpolation=cv2.INTER_AREA)
+    return _normalize(image)
 
 
 def choose_device() -> torch.device:
