@@ -120,17 +120,23 @@ def combine(clusters: list[Cluster], shape: tuple[int, ...]) -> np.ndarray:
 def segment(
     image: np.ndarray, heatmap: np.ndarray, generator: SamAutomaticMaskGenerator, max_area: float = 50.0
 ) -> SegmentationResult:
-    """Run the whole pipeline on an RGB image and its heatmap (same size, [0, 1]).
+    """Run the whole pipeline on an RGB image and its heatmap (same size, [0, 1])."""
+    return select(generator.generate(image), heatmap, max_area)
+
+
+def select(masks: list[dict], heatmap: np.ndarray, max_area: float = 50.0) -> SegmentationResult:
+    """Pick from SAM's masks of an image with the heatmap; ``segment`` without the SAM pass,
+    so several heatmaps can share one set of masks.
 
     Clusters covering more than ``max_area`` percent of the image are background
     (sky, ground, walls) and never selected: with a weak heatmap around the
     object, their sheer size can still earn them a high score.
     """
-    masks, mask_scores = rank_masks(generator.generate(image), heatmap)
+    masks, mask_scores = rank_masks(masks, heatmap)
     clusters = cluster_masks(masks, heatmap)
     candidates = [c for c in clusters if c.area <= max_area]
     selected = candidates[:elbow([c.score for c in candidates])]
-    return SegmentationResult(masks, mask_scores, clusters, candidates, selected, combine(selected, image.shape))
+    return SegmentationResult(masks, mask_scores, clusters, candidates, selected, combine(selected, heatmap.shape))
 
 
 def _device() -> torch.device:

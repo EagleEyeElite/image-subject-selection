@@ -10,9 +10,22 @@ from PIL import Image
 from torch.utils.data import ConcatDataset, Dataset
 from tqdm.auto import tqdm
 
+from .baselines import best_masks, center_mask, largest_mask
+from .metrics import (
+    AverageSurfaceDistance,
+    AverageSymmetricSurfaceDistance,
+    BoundaryIoU,
+    DiceCoefficient,
+    F1Score,
+    HausdorffDistance,
+    IoU,
+    NormalizedSurfaceDistance,
+    Precision,
+    Recall,
+)
 from .models import IMAGENET_LABELS, PROJECT_ROOT, predict, to_tensor
-from .segmentation import mask_generator, segment
-from .xai import to_image_size
+from .segmentation import mask_generator, select
+from .xai import GradCAM, LayerCAM, lrp_epsilon_plus, lrp_gamma_box, to_image_size
 
 PASCAL_ROOT = PROJECT_ROOT / "datasets" / "VOCSegmentation"
 RESULTS_DIR = PROJECT_ROOT / "results"
@@ -94,56 +107,96 @@ def single_class_images(table: pd.DataFrame, excluded=EXCLUDED_CLASSES) -> pd.Da
     return table[keep]
 
 
+LRP_LAYERS = ("1.0.conv2", "2.0.conv2", "3.0.conv2")
+
+
+def default_xai_methods(resnet) -> dict:
+    """The compared saliency methods. EP = LRP Epsilon-Plus, GB = LRP Epsilon-Gamma-Box;
+    with a layer name the relevance is taken at that layer instead of the input."""
+    return {
+        "LayerCAM": LayerCAM(resnet, resnet.layer4),
+        "GradCAM": GradCAM(resnet, resnet.layer4),
+        "EP": lrp_epsilon_plus(resnet),
+        **{f"EP {layer}": lrp_epsilon_plus(resnet, f"layer{layer}") for layer in LRP_LAYERS},
+        "GB": lrp_gamma_box(resnet),
+        **{f"GB {layer}": lrp_gamma_box(resnet, f"layer{layer}") for layer in LRP_LAYERS},
+    }
+
+
+def default_metrics() -> dict:
+    return {
+        "iou": IoU(), "precision": Precision(), "recall": Recall(), "f1": F1Score(), "dice": DiceCoefficient(),
+        "biou": BoundaryIoU(dilation_radius=3), "asd": AverageSurfaceDistance(),
+        "assd": AverageSymmetricSurfaceDistance(dilation_radius=3), "hd": HausdorffDistance(),
+        "nsd": NormalizedSurfaceDistance(),
+    }
+
+
+REFERENCES = {
+    "Baseline: largest mask": lambda masks, truth: largest_mask(masks, truth.shape),
+    "Baseline: center mask": lambda masks, truth: center_mask(masks, truth.shape),
+    "Upper bound: best SAM masks": best_masks,
+}
+
+
 class Evaluator:
     """Runs the pipeline with several XAI methods per image and collects metrics.
 
-    ``xai_methods`` maps a name to a method from ``saliency_sam.xai``;
-    ``metrics`` maps a name to a metric from ``saliency_sam.metrics``.
+    ``xai_methods`` maps a name to a method from ``image_subject_selection.xai``;
+    ``metrics`` maps a name to a metric from ``image_subject_selection.metrics``. SAM runs
+    once per image; every XAI method and the reference points in
+    ``references`` (see ``image_subject_selection.baselines``) use the same masks.
     """
 
-    def __init__(self, resnet, sam, xai_methods: dict, metrics: dict, labels=IMAGENET_LABELS, **generator_settings):
+    def __init__(self, resnet, sam, xai_methods: dict, metrics: dict, labels=IMAGENET_LABELS,
+                 references: dict = REFERENCES, **generator_settings):
         self.resnet = resnet
         self.generator = mask_generator(sam, **generator_settings)
         self.xai_methods = xai_methods
+        self.references = references
         self.metrics = metrics
         self.labels = labels
         self.rows = []
 
     def __call__(self, image: Image.Image, target, dataset_idx: int) -> list[dict]:
-        """Evaluate one image; returns one entry per XAI method with the masks for plotting."""
+        """Evaluate one image; returns one entry per method with the masks for plotting."""
         image_rgb = np.array(image.convert("RGB"))
         truth = object_mask(target)
         device = next(self.resnet.parameters()).device
         img_tensor = to_tensor(image_rgb).unsqueeze(0).to(device)
         class_idx = predict(self.resnet, img_tensor)
+        masks = self.generator.generate(image_rgb)
 
-        outputs = []
+        predictions = {}  # method -> (mask, heatmap or None)
         for name, method in self.xai_methods.items():
             heatmap = to_image_size(method(img_tensor, class_idx), image_rgb.shape)
-            result = segment(image_rgb, heatmap, self.generator)
-            prediction = result.mask.astype(np.uint8)
+            predictions[name] = (select(masks, heatmap).mask, heatmap)
+        for name, reference in self.references.items():
+            predictions[name] = (reference(masks, truth), None)
+
+        info = {"true_label": class_names(target), "pred_label": self.labels[class_idx]}
+        outputs = []
+        for name, (mask, heatmap) in predictions.items():
+            prediction = mask.astype(np.uint8)
             self.rows.append({
                 "dataset_idx": dataset_idx,
                 "xai_method": name,
-                "true_label": class_names(target),
-                "pred_label": self.labels[class_idx],
+                **info,
                 **{metric_name: metric(prediction, truth) for metric_name, metric in self.metrics.items()},
             })
-            outputs.append({
-                "xai_method": name,
-                "image": image_rgb,
-                "heatmap": heatmap,
-                "mask": result.mask,
-                "ground_truth": truth,
-                "true_label": class_names(target),
-                "pred_label": self.labels[class_idx],
-            })
+            outputs.append({"xai_method": name, "image": image_rgb, "heatmap": heatmap, "mask": mask,
+                            "ground_truth": truth, **info})
         return outputs
 
-    def run(self, dataset: Dataset, indices) -> pd.DataFrame:
-        for idx in tqdm(indices):
+    def run(self, dataset: Dataset, indices, checkpoint: str | Path | None = None, every: int = 50) -> pd.DataFrame:
+        """Evaluate ``indices``; with ``checkpoint``, write the results so far there every ``every`` images."""
+        for n, idx in enumerate(tqdm(indices), start=1):
             image, target = dataset[idx]
             self(image, target, idx)
+            if checkpoint and n % every == 0:
+                self.results.to_csv(checkpoint, index=False)
+        if checkpoint:
+            self.results.to_csv(checkpoint, index=False)
         return self.results
 
     @property

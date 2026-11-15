@@ -7,7 +7,7 @@ clusters before the elbow of the score curve form the segmentation.
 """
 
 from .models import choose_device, load_image, load_resnet, load_sam, predict, to_tensor
-from .segmentation import Cluster, SegmentationResult, mask_generator, segment
+from .segmentation import Cluster, SegmentationResult, mask_generator, segment, select
 
 __all__ = [
     "Cluster",
@@ -19,5 +19,6 @@ __all__ = [
     "mask_generator",
     "predict",
     "segment",
+    "select",
     "to_tensor",
 ]

@@ -1,5 +1,5 @@
 [project]
-name = "automatic-image-segmentation"
+name = "image-subject-selection"
 version = "0.1.0"
 description = "Automatic image segmentation by guiding SAM with saliency maps"
 readme = "README.md"
@@ -26,6 +26,9 @@ dependencies = [
     "thread-limits",
 ]
 
+[project.scripts]
+image-subject-selection = "image_subject_selection.cli:main"
+
 [dependency-groups]
 dev = [
     "jupyterlab>=4.6",
@@ -45,7 +48,7 @@ build-backend = "hatchling.build"
 allow-direct-references = true  # segment-anything from GitHub
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/saliency_sam"]
+packages = ["src/image_subject_selection"]
 
 [tool.uv]
 environments = ["sys_platform == 'linux'"]

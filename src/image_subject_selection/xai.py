@@ -10,6 +10,8 @@ import torch
 import torch.nn.functional as F
 import torchcam.methods
 from captum.attr import LayerGradCam
+from zennit.canonizers import SequentialMergeBatchNorm
+from zennit.composites import EpsilonGammaBox, EpsilonPlus
 
 
 class LayerCAM:
@@ -69,6 +71,16 @@ class LRP:
             finally:
                 handle.remove()
             return captured["output"].grad.squeeze(0).mean(dim=0).detach()
+
+
+def lrp_epsilon_plus(model, layer: str | None = None) -> LRP:
+    """LRP with the Epsilon-Plus rule ("EP" in the evaluation)."""
+    return LRP(model, EpsilonPlus(canonizers=[SequentialMergeBatchNorm()]), layer)
+
+
+def lrp_gamma_box(model, layer: str | None = None) -> LRP:
+    """LRP with the Epsilon-Gamma-Box rule, input bounds [-3, 3] ("GB" in the evaluation)."""
+    return LRP(model, EpsilonGammaBox(low=-3, high=3, canonizers=[SequentialMergeBatchNorm()]), layer)
 
 
 def to_image_size(heatmap: torch.Tensor, shape: tuple[int, ...]) -> np.ndarray:

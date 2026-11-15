@@ -31,7 +31,7 @@ COPY scripts/download_checkpoints.sh scripts/
 RUN scripts/download_checkpoints.sh /usr/models
 
 COPY . .
-# installs saliency_sam (editable, so the compose bind mount is live)
+# installs image_subject_selection (editable, so the compose bind mount is live)
 RUN uv sync --frozen
 
 EXPOSE 8888
