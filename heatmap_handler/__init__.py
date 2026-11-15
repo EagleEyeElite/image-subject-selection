@@ -9,17 +9,17 @@ def get_test_method():
 
 def get_all_methods():
     from .torchcam_imp import torchcam_CAM, torchcam_SmoothGradCAMpp, torchcam_ScoreCAM, torchcam_SSCAM, torchcam_GradCam, torchcam_GradCampp, torchcam_XGradCAM
-    from .lrp import simpleCRP, simpleLRP
+    from .lrp import simpleLRP
     methods = [torchcam_CAM, torchcam_SmoothGradCAMpp, torchcam_ScoreCAM,
-               torchcam_SSCAM, torchcam_GradCam, torchcam_GradCampp, torchcam_XGradCAM, simpleCRP, simpleLRP]
+               torchcam_SSCAM, torchcam_GradCam, torchcam_GradCampp, torchcam_XGradCAM, simpleLRP]
     return methods
 
 
 def get_specific_methods():
     from .torchcam_imp import torchcam_CAM, torchcam_SmoothGradCAMpp, torchcam_ScoreCAM, torchcam_SSCAM, torchcam_GradCam, torchcam_GradCampp, torchcam_XGradCAM
-    from .lrp import simpleCRP, simpleLRP
+    from .lrp import simpleLRP
     methods = [torchcam_CAM,
-               torchcam_GradCampp, torchcam_XGradCAM, simpleCRP, simpleLRP, torchcam_SmoothGradCAMpp]
+               torchcam_GradCampp, torchcam_XGradCAM, simpleLRP, torchcam_SmoothGradCAMpp]
     return methods
 
 

@@ -93,3 +93,17 @@ class PropagationHandler(HeatmapHandler):
         if self.execute is None:
             raise NotImplementedError
         return self.execute(prompt)
+
+
+class simpleLRP(PropagationHandler):
+    """LRP with fixed defaults: EpsilonPlusFlat on layer4, batch norms merged.
+
+    Takes only the model, like the torchcam handlers, so it can be listed
+    next to them (get_all_methods, Pipeline.ipynb).
+    """
+
+    def __init__(self, model: ModelHandler, layer='layer4', interpolation=None, threshold=None):
+        from zennit.canonizers import SequentialMergeBatchNorm
+        from zennit.composites import EpsilonPlusFlat
+        super().__init__(model, layer, EpsilonPlusFlat, SequentialMergeBatchNorm,
+                         interpolation=interpolation, threshold=threshold)
