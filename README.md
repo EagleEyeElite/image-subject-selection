@@ -36,29 +36,6 @@ selects the clusters that carry the relevance.
 
    ![Cluster scores and elbow](docs/images/falcon-heavy-boosters-scores.png)
 
-## Evaluation
-
-`notebooks/evaluation.ipynb` runs the pipeline on Pascal VOC 2012 images with a
-single object class and compares the selection with the ground truth. On a
-sample of 5 images (seed 123, SAM ViT-B), mean over the images:
-
-| Saliency method | IoU | Dice | Precision | Recall |
-| --- | --- | --- | --- | --- |
-| LRP Epsilon-Plus | 0.318 | 0.408 | 0.858 | 0.333 |
-| LRP Epsilon-Gamma-Box | 0.316 | 0.405 | 0.876 | 0.328 |
-| LRP Epsilon-Plus, layer2.0.conv2 | 0.315 | 0.402 | 0.863 | 0.331 |
-| GradCAM | 0.166 | 0.246 | 0.450 | 0.330 |
-
-The same 5 images (title: Pascal label / ResNet50 prediction; photos from
-Pascal VOC 2012, originally from Flickr):
-
-![GradCAM and LRP selections compared with the ground truth](docs/images/voc-comparison.png)
-
-LRP finds the right segments (high precision) but stops too early: the head of
-a cat, the front of a locomotive, the eyes of a tabby (low recall). GradCAM's
-coarse map also pulls in background such as the sky or a door. The notebook
-writes the full results to `results/` (not tracked).
-
 ---
 
 A group project of the Data Science project course at TU Berlin (DAI-Labor),

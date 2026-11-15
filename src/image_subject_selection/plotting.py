@@ -128,28 +128,6 @@ def evaluation_grid(samples: list[list[dict]]):
     return fig
 
 
-def method_comparison(rows: list[dict]):
-    """One row per image: the image, the ground truth (green), then the
-    selection of each method (red) with its IoU. ``rows`` hold "image",
-    "ground_truth", "label" and "selections" ({method: (mask, iou)})."""
-    methods = list(rows[0]["selections"])
-    cols = len(methods) + 2
-    fig, axes = plt.subplots(len(rows), cols, figsize=(2.3 * cols, 2.5 * len(rows)), squeeze=False)
-    for r, row in enumerate(rows):
-        panels = [
-            (row["image"] / 255, row["label"]),
-            (overlay(row["image"], row["ground_truth"].astype(bool), color=(0.0, 0.8, 0.0)), ""),
-            *((overlay(row["image"], mask), f"IoU {iou:.2f}") for mask, iou in row["selections"].values()),
-        ]
-        for c, (picture, title) in enumerate(panels):
-            header = ["Image", "Ground truth", *methods][c]
-            axes[r, c].imshow(picture)
-            axes[r, c].set_title(f"{header}\n{title}" if r == 0 else title, fontsize=9)
-            axes[r, c].axis("off")
-    fig.tight_layout()
-    return fig
-
-
 def _grid(images: list[np.ndarray], titles: list[str], cols: int):
     rows = max(1, math.ceil(len(images) / cols))
     fig, axes = plt.subplots(rows, cols, figsize=(2.4 * cols, 2.4 * rows), squeeze=False)
