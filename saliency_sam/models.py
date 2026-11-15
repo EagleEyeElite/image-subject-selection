@@ -1,7 +1,6 @@
 """Loading SAM, the ResNet50 classifier and images."""
 
 import os
-import warnings
 from pathlib import Path
 
 import cv2
@@ -46,11 +45,7 @@ def load_sam(model_type: str = "vit_b", checkpoint: str | Path | None = None, de
     checkpoint = checkpoint or CHECKPOINT_DIR / SAM_CHECKPOINTS[model_type]
     if not Path(checkpoint).is_file():
         raise FileNotFoundError(f"{checkpoint} not found, run scripts/download_checkpoints.sh")
-    with warnings.catch_warnings():
-        # segment_anything calls torch.load without weights_only
-        warnings.filterwarnings("ignore", "You are using `torch.load`", FutureWarning)
-        sam = sam_model_registry[model_type](checkpoint=str(checkpoint))
-    return sam.to(device or choose_device())
+    return sam_model_registry[model_type](checkpoint=str(checkpoint)).to(device or choose_device())
 
 
 def load_resnet(checkpoint: str | Path | None = None, device=None) -> torch.nn.Module:

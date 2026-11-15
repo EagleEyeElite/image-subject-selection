@@ -71,9 +71,10 @@ result.clusters    # all clusters with score and area, best first
 
 ## Setup
 
-The project uses [uv](https://docs.astral.sh/uv/). Python 3.12 and all
-dependencies, including PyTorch with CUDA, are pinned in `pyproject.toml` and
-`uv.lock`; `uv sync` also installs `saliency_sam` itself (editable).
+The project uses [uv](https://docs.astral.sh/uv/). Python 3.14 and all
+dependencies, including PyTorch 2.15 with CUDA 13 (NVIDIA driver >= 580), are
+pinned in `pyproject.toml` and `uv.lock`; `uv sync` also installs
+`saliency_sam` itself (editable).
 
 ```bash
 uv sync                               # .venv with all dependencies

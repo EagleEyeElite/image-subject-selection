@@ -4,40 +4,41 @@ version = "0.1.0"
 description = "Automatic image segmentation by guiding SAM with saliency maps"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.14,<3.15"
 dependencies = [
-    # Deep learning (PyPI wheels for Linux ship with CUDA 12.1 runtime libs)
-    "torch==2.4.1",
-    "torchvision==0.19.1",
-    "segment-anything @ git+https://github.com/facebookresearch/segment-anything.git@6fdee8f",
+    # Deep learning (the Linux wheels bring the CUDA 13 runtime; needs driver >= 580)
+    "torch>=2.15",
+    "torchvision>=0.29.2",
+    "segment-anything @ git+https://github.com/facebookresearch/segment-anything.git@dca509f",
     # XAI / saliency
-    "captum~=0.7.0",
-    "torchcam~=0.4.0",
-    "zennit~=0.5.1",
+    "captum>=0.9",
+    "torchcam>=0.5",
+    "zennit>=1.0",
     # Scientific stack
-    "numpy>=1.26,<2",
-    "scipy>=1.14",
-    "pandas>=2.2",
-    "matplotlib>=3.9",
-    "pillow~=10.3",
-    "opencv-python-headless>=4.10,<4.11",
-    "tqdm>=4.66",
+    "numpy>=2.5",
+    "scipy>=1.18",
+    "pandas>=3.1",
+    "matplotlib>=3.11",
+    "pillow>=13.0",
+    "opencv-python-headless>=5.0",
+    "tqdm>=4.70",
     # Caps BLAS/OpenMP threads at startup (see tools/thread-limits)
     "thread-limits",
 ]
 
 [dependency-groups]
 dev = [
-    "jupyterlab>=4.2",
-    "ipykernel>=6.29",
-    "ipywidgets>=8.1",
+    "jupyterlab>=4.6",
+    "ipykernel>=7.4",
+    "ipywidgets>=8.1.9",
+    "nbconvert>=7",
 ]
 
 [tool.uv.sources]
 thread-limits = { path = "tools/thread-limits", editable = false }
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.33"]
 build-backend = "hatchling.build"
 
 [tool.hatch.metadata]

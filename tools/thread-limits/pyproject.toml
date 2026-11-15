@@ -5,7 +5,7 @@ description = "Caps BLAS/OpenMP thread counts at interpreter startup (avoids Ope
 requires-python = ">=3.12"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.33"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
