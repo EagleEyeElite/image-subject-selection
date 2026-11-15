@@ -21,12 +21,6 @@ dependencies = [
     "matplotlib>=3.9",
     "pillow~=10.3",
     "opencv-python-headless>=4.10,<4.11",
-    "scikit-image>=0.24",
-    "scikit-learn>=1.5",
-    # Data
-    "datasets>=3.0",
-    "pyarrow<22",  # pyarrow>=22 requires numpy>=2
-    "huggingface-hub>=0.25",
     "tqdm>=4.66",
     # Caps BLAS/OpenMP threads at startup (see tools/thread-limits)
     "thread-limits",
@@ -42,7 +36,15 @@ dev = [
 [tool.uv.sources]
 thread-limits = { path = "tools/thread-limits", editable = false }
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true  # segment-anything from GitHub
+
+[tool.hatch.build.targets.wheel]
+packages = ["saliency_sam"]
+
 [tool.uv]
-# Flat repo of scripts/notebooks, not an installable package.
-package = false
 environments = ["sys_platform == 'linux'"]

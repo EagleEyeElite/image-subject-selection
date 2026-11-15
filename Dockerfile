@@ -5,7 +5,7 @@ FROM python:3.12-slim-bookworm
 ENV UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
-    RUNNING_IN_DOCKER=true \
+    CHECKPOINT_DIR=/usr/models \
     PYTHONUNBUFFERED=1
 
 # git: segment-anything is installed from GitHub; libglib2.0-0: needed by OpenCV
@@ -21,15 +21,16 @@ WORKDIR /usr/src/app
 # docker-compose bind mount of the repo onto /usr/src/app doesn't hide it.
 COPY pyproject.toml uv.lock README.md LICENSE ./
 COPY tools/ tools/
-RUN uv sync --frozen
+RUN uv sync --frozen --no-install-project
 
 # Model checkpoints (SAM vit_b + ResNet50)
 COPY scripts/download_checkpoints.sh scripts/
 RUN scripts/download_checkpoints.sh /usr/models
 
 COPY . .
+RUN uv sync --frozen  # installs saliency_sam (editable, so the compose bind mount is live)
 
 EXPOSE 8888
 
-# Jupyter reads the access token from $JUPYTER_TOKEN; Hugging Face reads $HF_TOKEN.
+# Jupyter reads the access token from $JUPYTER_TOKEN.
 CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
