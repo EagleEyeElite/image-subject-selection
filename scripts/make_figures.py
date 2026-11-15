@@ -1,4 +1,4 @@
-"""Regenerate the README figures in docs/images: the pipeline steps on the
+"""Regenerate the README figures in examples/figures: the pipeline steps on the
 Falcon Heavy example (the same as `image-subject-selection examples/falcon-heavy-boosters.jpeg --figures`)
 and the overviews of the corgi and seal examples.
 
@@ -24,7 +24,7 @@ from image_subject_selection.cli import save_figures
 from image_subject_selection.models import IMAGENET_LABELS, PROJECT_ROOT
 from image_subject_selection.xai import LayerCAM, to_image_size
 
-OUT = PROJECT_ROOT / "docs" / "images"
+OUT = PROJECT_ROOT / "examples" / "figures"
 
 
 def run(sam, resnet, filename):
